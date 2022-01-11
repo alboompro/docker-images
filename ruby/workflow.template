@@ -52,6 +52,7 @@ jobs:
       -
         name: Running docker tests
         run: |
+          docker pull ${{ matrix.tag }}
           ./tmp/official-images/test/run.sh "${{ matrix.tag }}"
           ./tmp/official-images/test/tests/ruby-binstubs/run.sh "${{ matrix.tag }}"
           ./tmp/official-images/test/tests/ruby-bundler/run.sh "${{ matrix.tag }}"
@@ -76,6 +77,7 @@ jobs:
       -
         name: Running docker tests
         run: |
+          docker pull ${{ matrix.tag }}-with-nodejs
           ./tmp/official-images/test/run.sh "${{ matrix.tag }}-with-nodejs"
           ./tmp/official-images/test/tests/ruby-binstubs/run.sh "${{ matrix.tag }}-with-nodejs"
           ./tmp/official-images/test/tests/ruby-bundler/run.sh "${{ matrix.tag }}-with-nodejs"
@@ -101,6 +103,7 @@ jobs:
       -
         name: Running docker tests
         run: |
+          docker pull ${{ matrix.tag }}-full
           ./tmp/official-images/test/run.sh "${{ matrix.tag }}-full"
           ./tmp/official-images/test/tests/ruby-binstubs/run.sh "${{ matrix.tag }}-full"
           ./tmp/official-images/test/tests/ruby-bundler/run.sh "${{ matrix.tag }}-full"
