@@ -34,7 +34,10 @@ jobs:
         name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v1
       -
-        name: Build and push
+        name: Set up image test
+        run: git clone --depth 1 https://github.com/docker-library/official-images.git ./tmp/official-images
+      -
+        name: Build and push Stretch
         uses: docker/build-push-action@v2
         with:
           context: ./ruby/${{ matrix.folder }}
@@ -42,14 +45,10 @@ jobs:
           builder: ${{ steps.buildx.outputs.name }}
           pull: true
           push: ${{ github.event_name != 'pull_request' }}
-          cache-from: type=registry,ref=${{ secrets.DOCKER_USERNAME }}/${{ matrix.folder }}:buildcache
-          cache-to: type=registry,ref=${{ secrets.DOCKER_USERNAME }}/${{ matrix.folder }}:buildcache,mode=max
+          cache-from: type=registry,ref=${{ matrix.tag }}-buildcache
+          cache-to: type=registry,ref=${{ matrix.tag }}-buildcache,mode=max
           tags: |
             ${{ matrix.tag }}
-            ${{ matrix.aliases }}
-      -
-        name: Set up image test
-        run: git clone --depth 1 https://github.com/docker-library/official-images.git ./tmp/official-images
       -
         name: Running docker tests
         run: |
@@ -61,3 +60,52 @@ jobs:
           ./tmp/official-images/test/tests/ruby-native-extension/run.sh "${{ matrix.tag }}"
           ./tmp/official-images/test/tests/ruby-nonroot/run.sh "${{ matrix.tag }}"
           ./tmp/official-images/test/tests/ruby-standard-libs/run.sh "${{ matrix.tag }}"
+      -
+        name: Build and push NodeJS Version
+        uses: docker/build-push-action@v2
+        with:
+          context: ./ruby/${{ matrix.folder }}/nodejs
+          file: ./ruby/${{ matrix.folder }}/nodejs/Dockerfile
+          builder: ${{ steps.buildx.outputs.name }}
+          pull: true
+          push: ${{ github.event_name != 'pull_request' }}
+          cache-from: type=registry,ref=${{ matrix.tag }}-with-nodejs-buildcache
+          cache-to: type=registry,ref=${{ matrix.tag }}-with-nodejs-buildcache,mode=max
+          tags: |
+            ${{ matrix.tag }}-with-nodejs
+      -
+        name: Running docker tests
+        run: |
+          ./tmp/official-images/test/run.sh "${{ matrix.tag }}-with-nodejs"
+          ./tmp/official-images/test/tests/ruby-binstubs/run.sh "${{ matrix.tag }}-with-nodejs"
+          ./tmp/official-images/test/tests/ruby-bundler/run.sh "${{ matrix.tag }}-with-nodejs"
+          ./tmp/official-images/test/tests/ruby-gems/run.sh "${{ matrix.tag }}-with-nodejs"
+          ./tmp/official-images/test/tests/ruby-hello-world/run.sh "${{ matrix.tag }}-with-nodejs"
+          ./tmp/official-images/test/tests/ruby-native-extension/run.sh "${{ matrix.tag }}-with-nodejs"
+          ./tmp/official-images/test/tests/ruby-nonroot/run.sh "${{ matrix.tag }}-with-nodejs"
+          ./tmp/official-images/test/tests/ruby-standard-libs/run.sh "${{ matrix.tag }}-with-nodejs"
+      -
+        name: Build and push Full Version
+        uses: docker/build-push-action@v2
+        with:
+          context: ./ruby/${{ matrix.folder }}
+          file: ./ruby/${{ matrix.folder }}/Dockerfile
+          builder: ${{ steps.buildx.outputs.name }}
+          pull: true
+          push: ${{ github.event_name != 'pull_request' }}
+          cache-from: type=registry,ref=${{ matrix.tag }}-full-buildcache
+          cache-to: type=registry,ref=${{ matrix.tag }}-full-buildcache,mode=max
+          tags: |
+            ${{ matrix.tag }}-full
+            ${{ matrix.aliases }}
+      -
+        name: Running docker tests
+        run: |
+          ./tmp/official-images/test/run.sh "${{ matrix.tag }}-full"
+          ./tmp/official-images/test/tests/ruby-binstubs/run.sh "${{ matrix.tag }}-full"
+          ./tmp/official-images/test/tests/ruby-bundler/run.sh "${{ matrix.tag }}-full"
+          ./tmp/official-images/test/tests/ruby-gems/run.sh "${{ matrix.tag }}-full"
+          ./tmp/official-images/test/tests/ruby-hello-world/run.sh "${{ matrix.tag }}-full"
+          ./tmp/official-images/test/tests/ruby-native-extension/run.sh "${{ matrix.tag }}-full"
+          ./tmp/official-images/test/tests/ruby-nonroot/run.sh "${{ matrix.tag }}-full"
+          ./tmp/official-images/test/tests/ruby-standard-libs/run.sh "${{ matrix.tag }}-full"

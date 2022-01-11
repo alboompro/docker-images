@@ -68,14 +68,6 @@ latest_versions.each_key do |version|
           # #{r_version['version']} on Debian Stretch
           - folder: "#{version}/stretch"
             tag: alboom/ruby-k8s-production:#{version}-stretch
-
-          # #{r_version['version']} on Debian Stretch with NodeJS
-          - folder: "#{version}/stretch/nodejs"
-            tag: alboom/ruby-k8s-production:#{version}-stretch-with-nodejs
-
-          # #{r_version['version']} on Debian Stretch FullVersion
-          - folder: "#{version}/stretch/full"
-            tag: alboom/ruby-k8s-production:#{version}-stretch-full
 )
 
   next unless first
