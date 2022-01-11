@@ -11,15 +11,15 @@ Production mode to best performance running at kubernetes.
 - [2.5 base](2.5/stretch) - [2.5 with nodejs](2.5/stretch/nodejs) - [2.5 full](2.5/stretch/full)
 - [2.4 base](2.4/stretch) - [2.4 with nodejs](2.4/stretch/nodejs) - [2.4 full](2.4/stretch/full)
 
-### Base version
+## Base version
 
 Compiled ruby on Debian stretch with [jemalloc](http://jemalloc.net/) support.
 
-### NodeJS version
+## NodeJS version
 
 Use ruby base image with [NodeJS 16.x](https://nodejs.org/en/) - [Yarn](https://yarnpkg.com/) - [MJML](https://mjml.io/)
 
-### Full version
+## Full version
 
 Use ruby with nodejs and add support to:
 
@@ -39,7 +39,7 @@ FROM alboom/ruby-k8s-production:3.1-stretch-full
 ENV BUNDLE_VERSION 1.16.0
 
 RUN set -eux; \
-    gem install -N bundler:${BUNDLE_VERSION} jemalloc; \
+    gem install -N bundler:${BUNDLE_VERSION}; \
     bundle config set without 'development test'
 
 ADD Gemfile* $APP_HOME/
@@ -53,3 +53,11 @@ ENV PORT=3000 \
 
 EXPOSE 3000
 ```
+
+## Contribute
+
+Use `.template` files to edit all Dockerfile versions.
+
+Use `./scripts/update-ruby` to update images to latest versions and applying templates.
+
+The build was executed with Github Actions. The workflow is generated automatically with `update-ruby` command too.
