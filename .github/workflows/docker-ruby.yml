@@ -1,0 +1,143 @@
+name: Ruby - Build and push image
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    types: [synchronize, opened]
+  schedule:
+    - cron: '54 07 12 * *' # on 12th day of every month at 07:54
+
+jobs:
+  build-push:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          
+
+          # 3.1.0 on Debian Stretch
+          - folder: "3.1/stretch"
+            tag: alboom/ruby-k8s-production:3.1-stretch
+
+          # 3.1.0 on Debian Stretch with NodeJS
+          - folder: "3.1/stretch/nodejs"
+            tag: alboom/ruby-k8s-production:3.1-stretch-with-nodejs
+
+          # 3.1.0 on Debian Stretch FullVersion
+          - folder: "3.1/stretch/full"
+            tag: alboom/ruby-k8s-production:3.1-stretch-full
+            aliases: |
+              alboom/ruby-k8s-production:latest
+
+
+          # 3.0.3 on Debian Stretch
+          - folder: "3.0/stretch"
+            tag: alboom/ruby-k8s-production:3.0-stretch
+
+          # 3.0.3 on Debian Stretch with NodeJS
+          - folder: "3.0/stretch/nodejs"
+            tag: alboom/ruby-k8s-production:3.0-stretch-with-nodejs
+
+          # 3.0.3 on Debian Stretch FullVersion
+          - folder: "3.0/stretch/full"
+            tag: alboom/ruby-k8s-production:3.0-stretch-full
+
+
+          # 2.7.5 on Debian Stretch
+          - folder: "2.7/stretch"
+            tag: alboom/ruby-k8s-production:2.7-stretch
+
+          # 2.7.5 on Debian Stretch with NodeJS
+          - folder: "2.7/stretch/nodejs"
+            tag: alboom/ruby-k8s-production:2.7-stretch-with-nodejs
+
+          # 2.7.5 on Debian Stretch FullVersion
+          - folder: "2.7/stretch/full"
+            tag: alboom/ruby-k8s-production:2.7-stretch-full
+
+
+          # 2.6.9 on Debian Stretch
+          - folder: "2.6/stretch"
+            tag: alboom/ruby-k8s-production:2.6-stretch
+
+          # 2.6.9 on Debian Stretch with NodeJS
+          - folder: "2.6/stretch/nodejs"
+            tag: alboom/ruby-k8s-production:2.6-stretch-with-nodejs
+
+          # 2.6.9 on Debian Stretch FullVersion
+          - folder: "2.6/stretch/full"
+            tag: alboom/ruby-k8s-production:2.6-stretch-full
+
+
+          # 2.5.9 on Debian Stretch
+          - folder: "2.5/stretch"
+            tag: alboom/ruby-k8s-production:2.5-stretch
+
+          # 2.5.9 on Debian Stretch with NodeJS
+          - folder: "2.5/stretch/nodejs"
+            tag: alboom/ruby-k8s-production:2.5-stretch-with-nodejs
+
+          # 2.5.9 on Debian Stretch FullVersion
+          - folder: "2.5/stretch/full"
+            tag: alboom/ruby-k8s-production:2.5-stretch-full
+
+
+          # 2.4.10 on Debian Stretch
+          - folder: "2.4/stretch"
+            tag: alboom/ruby-k8s-production:2.4-stretch
+
+          # 2.4.10 on Debian Stretch with NodeJS
+          - folder: "2.4/stretch/nodejs"
+            tag: alboom/ruby-k8s-production:2.4-stretch-with-nodejs
+
+          # 2.4.10 on Debian Stretch FullVersion
+          - folder: "2.4/stretch/full"
+            tag: alboom/ruby-k8s-production:2.4-stretch-full
+
+          
+
+    steps:
+      -
+        name: Checkout 
+        uses: actions/checkout@v2
+      -
+        name: Login to Docker Hub
+        if:   github.event_name != 'pull_request'
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_ACCESS_TOKEN }}
+      -
+        name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+      -
+        name: Build and push
+        uses: docker/build-push-action@v2
+        with:
+          context: ./ruby/${{ matrix.ruby-version }}
+          file: ./Dockerfile
+          builder: ${{ steps.buildx.outputs.name }}
+          pull: true
+          push: ${{ github.event_name != 'pull_request' }}
+          cache-from: type=registry,ref=${{ secrets.DOCKER_USERNAME }}/${{ matrix.ruby-version }}:buildcache
+          cache-to: type=registry,ref=${{ secrets.DOCKER_USERNAME }}/${{ matrix.ruby-version }}:buildcache,mode=max
+          tags: |
+            ${{ matrix.tag }}
+            ${{ matrix.aliases }}
+      -
+        name: Set up image test
+        run: git clone --depth 1 https://github.com/docker-library/official-images.git ./tmp/official-images
+      -
+        name: Running docker tests
+        run: |
+          ./tmp/official-images/test/run.sh "${{ matrix.tag }}"
+          ./tmp/official-images/test/tests/ruby-binstubs/run.sh "${{ matrix.tag }}"
+          ./tmp/official-images/test/tests/ruby-bundler/run.sh "${{ matrix.tag }}"
+          ./tmp/official-images/test/tests/ruby-gems/run.sh "${{ matrix.tag }}"
+          ./tmp/official-images/test/tests/ruby-hello-world/run.sh "${{ matrix.tag }}"
+          ./tmp/official-images/test/tests/ruby-native-extension/run.sh "${{ matrix.tag }}"
+          ./tmp/official-images/test/tests/ruby-nonroot/run.sh "${{ matrix.tag }}"
+          ./tmp/official-images/test/tests/ruby-standard-libs/run.sh "${{ matrix.tag }}"

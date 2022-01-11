@@ -1,0 +1,94 @@
+#!/usr/bin/env ruby
+
+require 'net/http'
+require 'yaml'
+require 'fileutils'
+
+# https://raw.githubusercontent.com/ruby/www.ruby-lang.org/master/_data/releases.yml
+uri = URI('https://raw.githubusercontent.com/ruby/www.ruby-lang.org/master/_data/releases.yml')
+res = Net::HTTP.get_response(uri)
+
+content = YAML.load(res.body)
+
+versions = content.select do |c|
+  c['version'].match(/^\d+\.\d+\.\d+$/) && c.has_key?('url') && c.has_key?('sha256')
+end
+
+base_path = File.join(File.dirname(File.dirname(__FILE__)), 'ruby')
+
+latest_versions = {}
+skip_versions = %w[2.1 2.2 2.3]
+
+versions.each do |version|
+  base_version = version['version'].split('.')[0..1].join('.')
+  next if skip_versions.include? base_version
+
+  minor_version = version['version'][(base_version.length + 1)..-1]
+  version['minor_version'] = minor_version.to_i
+  latest_versions[base_version] ||= version
+
+  latest_versions[base_version] = version if latest_versions[base_version]['minor_version'] < version['minor_version']
+end
+
+first = true
+builder_verions = ''
+
+latest_versions.each_key do |version|
+  r_version = latest_versions[version]
+  folder = "#{base_path}/#{version}/stretch"
+  FileUtils.mkdir_p(folder)
+
+  content = File.read("#{base_path}/Dockerfile-debian.template")
+
+  content.gsub! '%%PLACEHOLDER%%', 'stretch'
+  content.gsub! '%%VERSION%%', version
+  content.gsub! '%%FULL_VERSION%%', r_version['version']
+  content.gsub! '%%SHA256%%', r_version['sha256']['xz']
+
+  File.open("#{folder}/Dockerfile", 'w') do |f|
+    f.write content
+  end
+
+  content = File.read("#{base_path}/Dockerfile-debian-with-nodejs.template")
+  content.gsub! '%%PLACEHOLDER%%', "#{version}-stretch"
+  FileUtils.mkdir_p("#{folder}/nodejs")
+  File.open("#{folder}/nodejs/Dockerfile", 'w') do |f|
+    f.write content
+  end
+
+  content = File.read("#{base_path}/Dockerfile-debian-full.template")
+  content.gsub! '%%PLACEHOLDER%%', "#{version}-stretch-with-nodejs"
+  FileUtils.mkdir_p("#{folder}/full")
+  File.open("#{folder}/full/Dockerfile", 'w') do |f|
+    f.write content
+  end
+
+  builder_verions << %(
+
+          # #{r_version['version']} on Debian Stretch
+          - folder: "#{version}/stretch"
+            tag: alboom/ruby-k8s-production:#{version}-stretch
+
+          # #{r_version['version']} on Debian Stretch with NodeJS
+          - folder: "#{version}/stretch/nodejs"
+            tag: alboom/ruby-k8s-production:#{version}-stretch-with-nodejs
+
+          # #{r_version['version']} on Debian Stretch FullVersion
+          - folder: "#{version}/stretch/full"
+            tag: alboom/ruby-k8s-production:#{version}-stretch-full
+)
+
+  next unless first
+
+  builder_verions << "            aliases: |\n"
+  builder_verions << "              alboom/ruby-k8s-production:latest\n"
+  first = false
+end
+
+content = File.read("#{base_path}/workflow.template")
+content.gsub! '%%MATRIX_VERSIONS%%', builder_verions
+
+base_path = File.join(File.dirname(File.dirname(__FILE__)), '.github', 'workflows')
+File.open("#{base_path}/docker-ruby.yml", 'w') do |f|
+  f.write content
+end
