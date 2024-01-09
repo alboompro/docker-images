@@ -18,24 +18,34 @@ jobs:
         include:
           
 
-          # 3.1.0 on Debian Stretch
-          - folder: "3.1/stretch"
-            tag: alboom/ruby-k8s-production:3.1-stretch
+          # 3.3.0 on Debian Stretch
+          - folder: "3.3/stretch"
+            tag: alboom/ruby-k8s-production:3.3-stretch
             aliases: |
               alboom/ruby-k8s-production:latest
 
 
-          # 3.0.3 on Debian Stretch
+          # 3.2.2 on Debian Stretch
+          - folder: "3.2/stretch"
+            tag: alboom/ruby-k8s-production:3.2-stretch
+
+
+          # 3.1.4 on Debian Stretch
+          - folder: "3.1/stretch"
+            tag: alboom/ruby-k8s-production:3.1-stretch
+
+
+          # 3.0.6 on Debian Stretch
           - folder: "3.0/stretch"
             tag: alboom/ruby-k8s-production:3.0-stretch
 
 
-          # 2.7.5 on Debian Stretch
+          # 2.7.8 on Debian Stretch
           - folder: "2.7/stretch"
             tag: alboom/ruby-k8s-production:2.7-stretch
 
 
-          # 2.6.9 on Debian Stretch
+          # 2.6.10 on Debian Stretch
           - folder: "2.6/stretch"
             tag: alboom/ruby-k8s-production:2.6-stretch
 

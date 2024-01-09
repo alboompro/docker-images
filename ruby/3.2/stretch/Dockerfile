@@ -8,9 +8,9 @@ RUN set -eux; \
     echo 'update: --no-document'; \
   } >> /usr/local/etc/gemrc
 
-ENV RUBY_MAJOR 2.7
-ENV RUBY_VERSION 2.7.8
-ENV RUBY_DOWNLOAD_SHA256 f22f662da504d49ce2080e446e4bea7008cee11d5ec4858fc69000d0e5b1d7fb
+ENV RUBY_MAJOR 3.2
+ENV RUBY_VERSION 3.2.2
+ENV RUBY_DOWNLOAD_SHA256 4b352d0f7ec384e332e3e44cdbfdcd5ff2d594af3c8296b5636c710975149e23
 
 # some of ruby's build scripts are written in ruby
 #   we purge system ruby later to make sure our final image uses what we just built

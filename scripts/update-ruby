@@ -1,5 +1,6 @@
 #!/usr/bin/env ruby
 
+require 'active_support/all'
 require 'net/http'
 require 'yaml'
 require 'fileutils'
@@ -8,7 +9,7 @@ require 'fileutils'
 uri = URI('https://raw.githubusercontent.com/ruby/www.ruby-lang.org/master/_data/releases.yml')
 res = Net::HTTP.get_response(uri)
 
-content = YAML.load(res.body)
+content = YAML.safe_load(res.body, permitted_classes: [Date])
 
 versions = content.select do |c|
   c['version'].match(/^\d+\.\d+\.\d+$/) && c.has_key?('url') && c.has_key?('sha256')
